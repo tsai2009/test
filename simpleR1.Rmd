@@ -1,0 +1,145 @@
+---
+title: "R motivation: ggplot2"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+editor_options:
+  chunk_output_type: inline
+---
+
+Do you have the most recent version of R and RStudio?
+update all of your packages
+
+```
+version$version.string
+RStudio.Version()$version
+update.packages(ask = FALSE, checkBuilt = TRUE)
+
+```
+
+*R code example: Linear regression 
+
+```{r}
+fit = lm(mpg ~ wt, data = mtcars)
+summary(fit)
+```
+
+* Baes Plot
+
+```{r}
+par(mar = c(4, 4, 1, .1)) ## Just for nice plot margins on this slide deck
+plot(mtcars$wt, mtcars$mpg)
+```
+
+* ggplot
+
+## More on ggplot2
+
+
+If you don't have them already, install the `ggplot2` and `gapminder` packages via either:
+
+*Console*: Enter `install.packages(c("ggplot2", "gapminder"), dependencies=T)`.
+
+*RStudio*: Click the "Packages" tab in the bottom-right window pane. Then click "Install" and search for these two packages.
+
+```{r}
+library(ggplot2)
+ggplot(data = mtcars, aes(x = wt, y = mpg)) + 
+  geom_smooth(method = "lm", col = "red") + 
+  geom_point()
+```
+
+
+##
+
+Once the packages are installed, load them into your R session with the library() function.
+
+```{r}
+library(ggplot2)
+library(gapminder) ## We're just using this package for the gapminder data
+```
+Notice too that you don't need quotes around the package names any more.
+
+## The gapminder dataset
+
+Because we're going to be plotting the gapminder dataset, it is helpful to know that it contains panel data on life expectancy, population size, and GDP per capita for 142 countries since the 1950s.
+
+```{r}
+gapminder
+```
+
+```{r}
+ggplot(data = gapminder, mapping = aes(x = gdpPercap, y = lifeExp)) + 
+  geom_point()
+```
+
+##
+
+```{r}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, size = pop, col = continent)) + facet_wrap(~continent)+
+  geom_point(alpha = 0.3) ## "alpha" controls transparency. Takes a value between 0 and 1.
+```
+##
+
+```{r}
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp, size = pop, col = continent)) + scale_x_log10() +
+  geom_point(alpha = 0.3)  + labs(title="y vs log(x)")
+```
+
+## intermediate plot object
+
+At this point, instead of repeating the same ggplot2 call every time, it will prove convenient to define an intermediate plot object that we can re-use.
+
+```{r}
+p = ggplot(data = gapminder, 
+           aes(x = gdpPercap, y = lifeExp)) + scale_x_log10() 
+p
+```
+
+```{r}
+p + 
+  geom_point(alpha = 0.3)  +
+  geom_smooth(method = "loess")
+```
+
+```{r}
+p + 
+  geom_point(aes(color=continent), alpha = 0.3)  +
+  geom_smooth(method = "loess")
+```
+```{r}
+ggplot(data = gapminder) + 
+  geom_density(aes(x = gdpPercap, fill = continent), alpha=0.3)
+```
+```{r}
+p2 =
+  p + 
+  geom_point(aes(col = continent), alpha = 0.3) +
+  scale_x_log10(labels = scales::dollar) + ## Switch to logarithmic scale on x-axis. Use dollar units.
+  labs(x = "Log (GDP per capita)", y = "Life Expectancy") + ## Better axis titles
+  theme_minimal() ## Try a minimal (b&w) plot theme
+p2
+```
+
+
+## animation
+```{r}
+library(gganimate)
+ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  facet_wrap(~continent) +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  ease_aes('linear')
+```
+
+*Some useful reading
+
+- Chapter 3 of R for Data Science by Hadley Wickham and Garett Grolemund.
+- Data Visualization: A Practical Guide by Kieran Healy.
+- Designing ggplots by Malcom Barrett.
